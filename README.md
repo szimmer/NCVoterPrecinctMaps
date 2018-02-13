@@ -14,4 +14,4 @@ The Race/Ethnicity variable was created as Hispanic if ethnic_code indicated His
 The data summarized at the precinct level is merged onto precinct maps to create a sf file.
 
 # Shiny App
-Currently, the Shiny app is only plotting data for Durham County - selfishly becuase that's where I live but also because the state file is very large and it is being developed on a smaller set of data first. The Shiny app is deployed at https://stephanie-zimmer.shinyapps.io/NCVoterMaps/ 
+Currently, the Shiny app is only plotting data for Durham County - selfishly becuase that's where I live but also because the state file is very large and it is being developed on a smaller set of data first. The Shiny app is deployed at https://stephanie-zimmer.shinyapps.io/NCVoterPrecinctMaps/
