@@ -102,6 +102,7 @@ trymerge <- full_join(MapBys, DataBys,
   arrange(county_id, precinct_abbrv))
 
 MapData <- inner_join(NCPrecinct, PrecinctSummaryData, 
-                      by=c("county_id", "precinct_abbrv"))
+                      by=c("county_id", "precinct_abbrv")) %>%
+  filter(county_id==32)
 
 saveRDS(MapData, "app/VoterDataWithMap.rds")
