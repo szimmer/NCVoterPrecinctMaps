@@ -15,8 +15,7 @@ library(tidyverse)
 library(sf)
 library(glue)
 
-MapData <- readRDS("VoterDataWithMap.rds") %>% 
-  filter(COUNTY_NAM=="DURHAM")
+MapData <- readRDS("VoterDataWithMapDurham.rds") 
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -55,14 +54,8 @@ server <- function(input, output, session) {
     MapData %>% filter(variable==input$variable)
   })
   
-  MapDataStat <- reactive({
-    MapDataVariable() %>% filter(
-      stat==input$stat
-    ) 
-  })
-  
   MapDataSelect <- reactive({
-    MapDataStat() %>% filter(
+    MapDataVariable() %>% filter(
       level %in% c(input$level)
     )
   })
@@ -101,7 +94,7 @@ server <- function(input, output, session) {
   })
   
   output$mapOut <- renderPlot({
-    ggplot(MapDataSelect(), aes(fill=value)) +
+    ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
       geom_sf() +
       guides(fill=guide_legend(title=legendlabel()))
   })

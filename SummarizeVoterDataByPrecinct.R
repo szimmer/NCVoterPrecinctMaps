@@ -31,7 +31,7 @@ PartySummary <- VoteRecords %>%
   gather(Democrat, Libertarian, Republican, Unaffiliated, key="level", value="Number") %>%
   mutate(Percent=Number/sum(Number)*100,
          variable="Party") %>%
-  gather(Number, Percent, key="stat", value="value") %>%
+  # gather(Number, Percent, key="stat", value="value") %>%
   arrange(county_id, precinct_desc, precinct_abbrv)
 
 table(VoteRecords$gender_code, useNA = "ifany")
@@ -44,7 +44,7 @@ GenderSummary <- VoteRecords %>%
   gather(Female, Male, Undesignated, key="level", value="Number") %>%
   mutate(Percent=Number/sum(Number)*100,
          variable="Gender") %>%
-  gather(Number, Percent, key="stat", value="value") %>%
+  # gather(Number, Percent, key="stat", value="value") %>%
   arrange(county_id, precinct_desc, precinct_abbrv)
 
 summary(VoteRecords$birth_age)
@@ -56,7 +56,7 @@ AgeSummary <- VoteRecords %>%
     Min=min(birth_age),
     Max=max(birth_age)
   ) %>% 
-  gather(Mean, Median, Min, Max, key="stat", value="value") %>%
+  # gather(Mean, Median, Min, Max, key="stat", value="value") %>%
   mutate(variable="Age", level="NA") %>%
   arrange(county_id, precinct_desc, precinct_abbrv)
 
@@ -71,14 +71,16 @@ RaceEthSummary <- VoteRecords %>%
   gather(White, Black, Other, Unknown, Hispanic, key="level", value="Number") %>%
   mutate(Percent=Number/sum(Number)*100,
          variable="Race/Ethnicity") %>%
-  gather(Number, Percent, key="stat", value="value") %>%
+  # gather(Number, Percent, key="stat", value="value") %>%
   arrange(county_id, precinct_desc, precinct_abbrv)
 
 PopSummary <- VoteRecords %>% 
   summarise(value=n()) %>%
-  mutate(variable="Registered Voters",
-         stat="Number",
-         level="NA")
+  # mutate(variable="Registered Voters",
+  #        stat="Number",
+  #        level="NA")
+  mutate(Number=value, level="NA", variable="Registered Voters") %>%
+  select(-value)
 
 PrecinctSummaryData <- bind_rows(
   AgeSummary,
@@ -99,10 +101,10 @@ trymerge <- full_join(MapBys, DataBys,
                       by=c("county_id", "precinct_abbrv"))
 
 (probmerge <- trymerge %>% filter(is.na(OnMap)|is.na(OnData)) %>%
-  arrange(county_id, precinct_abbrv))
+    arrange(county_id, precinct_abbrv))
 
 MapData <- inner_join(NCPrecinct, PrecinctSummaryData, 
-                      by=c("county_id", "precinct_abbrv")) %>%
-  filter(county_id==32)
+                      by=c("county_id", "precinct_abbrv"))
 
 saveRDS(MapData, "app/VoterDataWithMap.rds")
+saveRDS(filter(MapData, county_id==32), "app/VoterDataWithMapDurham.rds")
