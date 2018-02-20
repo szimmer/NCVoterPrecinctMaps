@@ -71,12 +71,15 @@ PopSummary <- VoteRecords %>%
   mutate(Number=value, level="NA", variable="Registered Voters") %>%
   select(-value)
 
+GenderImpSummary <- read_rds("GenderImpSummary.rds")
+
 PrecinctSummaryData <- bind_rows(
   AgeSummary,
   GenderSummary,
   PartySummary,
   RaceEthSummary,
-  PopSummary
+  PopSummary,
+  GenderImpSummary
 )
 
 NCPrecinct <- st_read(dsn="SBE_PRECINCTS_20170519",layer="Precincts2") %>%

@@ -38,7 +38,7 @@ ui <- fluidPage(
       ),
       selectInput("variable",
                   "Variable:",
-                  choices=c("Age", "Gender", "Party", "Race/Ethnicity", "Registered Voters")
+                  choices=c("Age", "Gender", "Party", "Race/Ethnicity", "Registered Voters", "Gender (Imputed)")
       ),
       selectInput("stat",
                   "Statistic:",
@@ -98,7 +98,10 @@ server <- function(input, output, session) {
     } else if (input$variable=="Registered Voters"){
       updateSelectInput(session, "stat", choices = "Number")
       updateSelectInput(session, "level", choices = "NA")
-      
+    } else if(input$variable=="Gender (Imputed)"){
+      updateSelectInput(session, "stat", choices = c("Percent", "Number"))
+      updateSelectInput(session, "level", 
+                        choices = c("Female", "Male"))
     }
   })
   
@@ -112,7 +115,7 @@ server <- function(input, output, session) {
   })
   
   output$mapOut <- renderPlot({
-    if (input$stat=="Percent"){
+    if (input$stat=="Percent" & input$variable!="Gender (Imputed)"){
       ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
         geom_sf() +
         guides(fill=guide_legend(title=legendlabel())) +
@@ -122,6 +125,11 @@ server <- function(input, output, session) {
         geom_sf() +
         guides(fill=guide_legend(title=legendlabel())) +
         scale_fill_gradient(low="white", high="darkblue", limits=c(18,120))
+    } else if (input$variable=="Gender (Imputed)" & input$stat=="Percent"){
+      ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
+        geom_sf() +
+        guides(fill=guide_legend(title=legendlabel())) +
+        scale_fill_gradient(low="white", high="darkblue", limits=c(25,75))
     } else{
       ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
         geom_sf() +
