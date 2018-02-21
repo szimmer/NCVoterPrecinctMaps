@@ -18,8 +18,8 @@ library(glue)
 MapData <- readRDS("VoterDataWithMap.rds") %>%
   mutate(COUNTY_NAM=str_to_title(COUNTY_NAM))
 
-# counties <- c("All", MapData %>% pull(COUNTY_NAM) %>% unique() %>% sort())
-counties <- MapData %>% pull(COUNTY_NAM) %>% unique() %>% sort()
+counties <- c("All", MapData %>% pull(COUNTY_NAM) %>% unique() %>% sort())
+# counties <- MapData %>% pull(COUNTY_NAM) %>% unique() %>% sort()
 
 
 # Define UI for application that draws a histogram
