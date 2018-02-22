@@ -21,6 +21,7 @@ MapData <- readRDS("VoterDataWithMap.rds") %>%
 counties <- c("All", MapData %>% pull(COUNTY_NAM) %>% unique() %>% sort())
 # counties <- MapData %>% pull(COUNTY_NAM) %>% unique() %>% sort()
 
+CountyMapData <- readRDS("NCCounty.rds")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -65,6 +66,14 @@ server <- function(input, output, session) {
       MapData %>% filter(COUNTY_NAM==input$countySelect)
     } else{
       MapData
+    }
+  })
+  
+  MapDataCountyBoundary <- reactive({
+    if (input$countySelect != "All"){
+      CountyMapData %>% filter(COUNTY_NAM==input$countySelect)
+    } else{
+      CountyMapData
     }
   })
   
@@ -116,25 +125,30 @@ server <- function(input, output, session) {
   
   output$mapOut <- renderPlot({
     if (input$stat=="Percent" & input$variable!="Gender (Imputed)"){
-      ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
-        geom_sf() +
+      ggplot() +
+        geom_sf(data=MapDataSelect(), aes_string(fill=input$stat), colour=NA) +
         guides(fill=guide_legend(title=legendlabel())) +
-        scale_fill_gradient(low="white", high="darkblue", limits=c(0,100))
+        scale_fill_gradient(low="white", high="darkblue", limits=c(0,100))+
+        geom_sf(data=MapDataCountyBoundary(), fill=NA, colour="black")
+      
     } else if (input$variable=="Age"){
-      ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
-        geom_sf() +
+      ggplot() +
+        geom_sf(data=MapDataSelect(), aes_string(fill=input$stat), colour=NA) +
         guides(fill=guide_legend(title=legendlabel())) +
-        scale_fill_gradient(low="white", high="darkblue", limits=c(18,120))
+        scale_fill_gradient(low="white", high="darkblue", limits=c(18,120))+
+        geom_sf(data=MapDataCountyBoundary(), fill=NA, colour="black")
     } else if (input$variable=="Gender (Imputed)" & input$stat=="Percent"){
-      ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
-        geom_sf() +
+      ggplot() +
+        geom_sf(data=MapDataSelect(), aes_string(fill=input$stat), colour=NA) +
         guides(fill=guide_legend(title=legendlabel())) +
-        scale_fill_gradient(low="white", high="darkblue", limits=c(25,75))
+        scale_fill_gradient(low="white", high="darkblue", limits=c(25,75))+
+        geom_sf(data=MapDataCountyBoundary(), fill=NA, colour="black")
     } else{
-      ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
-        geom_sf() +
+      ggplot() +
+        geom_sf(data=MapDataSelect(), aes_string(fill=input$stat), colour=NA) +
         guides(fill=guide_legend(title=legendlabel())) +
-        scale_fill_gradient(low="white", high="darkblue")
+        scale_fill_gradient(low="white", high="darkblue")+
+        geom_sf(data=MapDataCountyBoundary(), fill=NA, colour="black")
     }
   })
   
