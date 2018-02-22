@@ -1,26 +1,13 @@
 library(tidyverse)
 library(sf)
-VoteRaw <- read_tsv("ncvoter_Statewide.txt")
+library(naniar)
+VoteRecords <- readRDS("ActiveVoters.rds")
 
-VoteRecords <- VoteRaw %>% 
-  mutate(RaceEth=case_when(
-    ethnic_code=="HL" ~ "Hispanic",
-    race_code=="W" ~ "White",
-    race_code=="B" ~ "Black",
-    race_code %in% c("I", "O","A","M") ~ "Other",
-    TRUE ~ "Unknown"
-  )) %>% 
-  select(county_id, status_cd:absent_ind, race_code:birth_state,
-         registr_dt:municipality_desc, confidential_ind, birth_year,
-         RaceEth) %>% 
-  arrange(desc(confidential_ind)) %>% 
-  filter(status_cd=="A",!is.na(precinct_desc)) %>%
-  group_by(county_id, precinct_desc, precinct_abbrv) 
+checkRaceCode <- VoteRecords %>% ungroup() %>% 
+  count(RaceEth, race_code, ethnic_code) %>%
+  print(n=50)
 
-checkRaceCode <- VoteRecords %>% group_by(RaceEth, race_code, ethnic_code) %>%
-  summarise(n=n()) %>% print(n=50)
-
-table(VoteRecords$party_cd, useNA = "ifany")
+VoteRecords %>% ungroup() %>% count(party_cd)
 PartySummary <- VoteRecords %>%
   summarise(
     Democrat=sum(party_cd=="DEM"),
@@ -34,7 +21,7 @@ PartySummary <- VoteRecords %>%
   # gather(Number, Percent, key="stat", value="value") %>%
   arrange(county_id, precinct_desc, precinct_abbrv)
 
-table(VoteRecords$gender_code, useNA = "ifany")
+VoteRecords %>% ungroup() %>% count(gender_code)
 GenderSummary <- VoteRecords %>%
   summarise(
     Female=sum(gender_code=="F"),
@@ -47,9 +34,11 @@ GenderSummary <- VoteRecords %>%
   # gather(Number, Percent, key="stat", value="value") %>%
   arrange(county_id, precinct_desc, precinct_abbrv)
 
-summary(VoteRecords$birth_age)
+VoteRecords %>% ungroup() %>% select(birth_age) %>% arrange(desc(birth_age)) %>%
+  print()
 
 AgeSummary <- VoteRecords %>%
+  mutate(birth_age=ifelse(birth_age <= 121, birth_age, NA)) %>%
   summarise(
     Mean=mean(birth_age),
     Median=median(birth_age),
@@ -82,12 +71,15 @@ PopSummary <- VoteRecords %>%
   mutate(Number=value, level="NA", variable="Registered Voters") %>%
   select(-value)
 
+GenderImpSummary <- read_rds("GenderImpSummary.rds")
+
 PrecinctSummaryData <- bind_rows(
   AgeSummary,
   GenderSummary,
   PartySummary,
   RaceEthSummary,
-  PopSummary
+  PopSummary,
+  GenderImpSummary
 )
 
 NCPrecinct <- st_read(dsn="SBE_PRECINCTS_20170519",layer="Precincts2") %>%

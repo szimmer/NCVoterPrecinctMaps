@@ -15,20 +15,30 @@ library(tidyverse)
 library(sf)
 library(glue)
 
-MapData <- readRDS("VoterDataWithMapDurham.rds") 
+MapData <- readRDS("VoterDataWithMap.rds") %>%
+  mutate(COUNTY_NAM=str_to_title(COUNTY_NAM))
+
+counties <- c("All", MapData %>% pull(COUNTY_NAM) %>% unique() %>% sort())
+# counties <- MapData %>% pull(COUNTY_NAM) %>% unique() %>% sort()
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Durham Registered Voters by Precinct"),
+  titlePanel("Registered Voters by Precinct"),
   
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(
+      selectInput("countySelect",
+                  "County:",
+                  choices=counties,
+                  selected="Durham"
+      ),
       selectInput("variable",
                   "Variable:",
-                  choices=c("Age", "Gender", "Party", "Race/Ethnicity", "Registered Voters")
+                  choices=c("Age", "Gender", "Party", "Race/Ethnicity", "Registered Voters", "Gender (Imputed)")
       ),
       selectInput("stat",
                   "Statistic:",
@@ -50,8 +60,16 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   
+  MapDataCounty <- reactive({
+    if (input$countySelect != "All"){
+      MapData %>% filter(COUNTY_NAM==input$countySelect)
+    } else{
+      MapData
+    }
+  })
+  
   MapDataVariable <-reactive({
-    MapData %>% filter(variable==input$variable)
+    MapDataCounty() %>% filter(variable==input$variable)
   })
   
   MapDataSelect <- reactive({
@@ -80,7 +98,10 @@ server <- function(input, output, session) {
     } else if (input$variable=="Registered Voters"){
       updateSelectInput(session, "stat", choices = "Number")
       updateSelectInput(session, "level", choices = "NA")
-      
+    } else if(input$variable=="Gender (Imputed)"){
+      updateSelectInput(session, "stat", choices = c("Percent", "Number"))
+      updateSelectInput(session, "level", 
+                        choices = c("Female", "Male"))
     }
   })
   
@@ -94,9 +115,27 @@ server <- function(input, output, session) {
   })
   
   output$mapOut <- renderPlot({
-    ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
-      geom_sf() +
-      guides(fill=guide_legend(title=legendlabel()))
+    if (input$stat=="Percent" & input$variable!="Gender (Imputed)"){
+      ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
+        geom_sf() +
+        guides(fill=guide_legend(title=legendlabel())) +
+        scale_fill_gradient(low="white", high="darkblue", limits=c(0,100))
+    } else if (input$variable=="Age"){
+      ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
+        geom_sf() +
+        guides(fill=guide_legend(title=legendlabel())) +
+        scale_fill_gradient(low="white", high="darkblue", limits=c(18,120))
+    } else if (input$variable=="Gender (Imputed)" & input$stat=="Percent"){
+      ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
+        geom_sf() +
+        guides(fill=guide_legend(title=legendlabel())) +
+        scale_fill_gradient(low="white", high="darkblue", limits=c(25,75))
+    } else{
+      ggplot(MapDataSelect(), aes_string(fill=input$stat)) +
+        geom_sf() +
+        guides(fill=guide_legend(title=legendlabel())) +
+        scale_fill_gradient(low="white", high="darkblue")
+    }
   })
   
 }
