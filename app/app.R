@@ -8,9 +8,9 @@
 #
 
 library(shiny)
-# to use the geom_sf, need to install this branch of ggplot2
-library(devtools)
-devtools::install_github("tidyverse/ggplot2", ref="sf")
+
+
+
 library(tidyverse)
 library(sf)
 library(glue)
